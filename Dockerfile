@@ -1,31 +1,28 @@
-#Getting the Python as a base Image
+# Use Python 3.9-slim as the base image
 FROM python:3.9.20-slim
 
-
-#setting up the Working Dir For rest of the process
-#note the Docker file will create the directory if the mentioned dir does'nt exist in the filesystem
+# Set the working directory
 WORKDIR /usr/local/app/src
 
-# installing the python-Django Framework
+# Install system dependencies and create a virtual environment
+RUN apt-get update && apt-get install -y \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/* \
+    && python3 -m venv myenv
 
-RUN set -eux;\
-          apt-get update; \
-          python3 -m venv myenv ; \
-          . myenv/bin/activate ; \
-          pip install django                
+# Activate the virtual environment and install Django
+RUN myenv/bin/python -m pip install --upgrade pip && \
+    myenv/bin/python -m pip install django
 
+# Copy the project files to the container
+COPY ./myProject/ .
 
-#copying the source code from the host to the image File System
-#excluding the README.md file and Docker File
-# it's also excluding the mentioned directory and copying only the child look into it
-COPY ./myProject/  . 
-
+# Expose port 8000 for Django development server
 EXPOSE 8000
 
-# cannot be changed during the DOCKER RUN command in the docker client
-#in EXEC form
-ENTRYPOINT ["python3", "manage.py", "runserver"]
- #runs in the production Environment
- # can also override the ip Range and Port during the docker run in the Docker Client
+# Use ENTRYPOINT to ensure the virtual environment is activated and Django is run
+ENTRYPOINT ["/bin/bash", "-c", ". /usr/local/app/src/myenv/bin/activate && exec python manage.py runserver"]
+
+# Default command to specify the IP and port for Django
 CMD ["0.0.0.0:8000"]
 
