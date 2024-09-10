@@ -10,7 +10,9 @@ WORKDIR /usr/local/app/src
 
 RUN set -eux;\
           apt-get update; \
-          apt-get install python3-django -y                
+          python3 -m venv myenv ; \
+          . myenv/bin/activate ; \
+          pip install django                
 
 
 #copying the source code from the host to the image File System
